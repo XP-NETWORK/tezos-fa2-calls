@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "mint": "ts-node ./src/mint.ts",
+    "setup": "ts-node ./app/setup.ts",
+    "mint": "ts-node ./app/mint.ts",
+    "burn": "ts-node ./app/burn.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

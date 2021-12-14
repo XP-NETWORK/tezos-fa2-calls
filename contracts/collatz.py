@@ -17,12 +17,12 @@ class Collatz(sp.Contract):
     @sp.entry_point
     def mint(self, params):
         sp.set_type(params.to, sp.TAddress)
-        sp.set_type(params.data, sp.TBigMap(sp.TString, sp.TBytes))
+        sp.set_type(params.data, sp.TMap(sp.TString, sp.TBytes))
 
         tk = sp.TRecord(
             address=sp.TAddress,
             amount=sp.TNat,
-            metadata=sp.TBigMap(
+            metadata=sp.TMap(
                 sp.TString, sp.TBytes
             ),
             token_id=sp.TNat
@@ -38,6 +38,25 @@ class Collatz(sp.Contract):
         call(mint_entrypoint, mint_args)
 
         self.data.nft_cnt += sp.nat(1)
+        
+    @sp.entry_point
+    def burn(self, params):
+        sp.set_type(params.address, sp.TAddress)
+        sp.set_type(params.token_id, sp.TNat)
+        
+        tk = sp.TRecord(
+            address=sp.TAddress,
+            amount=sp.TNat,
+            token_id=sp.TNat
+        )
+        burn_entrypoint = sp.contract(
+            tk, self.data.xpnft_contract, "burn").open_some()
+        burn_args = sp.record(
+            address=params.address,
+            amount=sp.nat(1),
+            token_id=params.token_id
+        )
+        call(burn_entrypoint, burn_args)
 
 
 @sp.add_test(name="collatz_test")
@@ -52,9 +71,14 @@ def test():
         xpnft_address=sp.address(xpnft_address)
     )
     scenario += collatz
+    owner = sp.test_account("Alice")
     collatz.mint(
-        to=sp.address(os.environ.get("XPNFT_ADMIN")),
-        data=sp.utils.metadata_of_url("https://example.com")
+        to=owner.address,
+        data=sp.map({"": sp.utils.bytes_of_string("https://example.com")})
+    )
+    collatz.burn(
+        address=owner.address,
+        token_id=collatz.data.nft_cnt
     )
 
 
